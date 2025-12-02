@@ -40,7 +40,7 @@ void push(cpu6502 *cpu, uint8_t value){
   cpu->SP--;
 }
 
-uint8_t pull(cpu6502 *cpu, uint8_t value){
+uint8_t pull(cpu6502 *cpu){
   cpu->SP++;
   return memory[0x0100 | cpu->SP];
 }
@@ -217,8 +217,8 @@ void PHP(cpu6502 *cpu){
   // push(cpu, cpu->P); not sure how to do for now
 }
 
-uint8_t PLA(cpu6502 *cpu, uint8_t value){
-  return pull(cpu, value);
+uint8_t PLA(cpu6502 *cpu){
+  return pull(cpu);
 }
 
 // TODO: IMPLEMENT PLP
