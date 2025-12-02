@@ -155,7 +155,7 @@ void DEY_c(cpu6502 *cpu){
   cpu->P.N = (value & 0x80) != 0;
 }
 
-#define EOR(M) EOR(&default_cpu, M)
+#define EOR(M) EOR_c(&default_cpu, M)
 void EOR_c(cpu6502 *cpu, uint8_t M){
   // Z N affected
   cpu->A = cpu->A ^ M;
@@ -220,7 +220,7 @@ void LDX_c(cpu6502 *cpu, uint8_t M){
 #define LDY(M) LDY(&default_cpu, M)
 void LDY_c(cpu6502 *cpu, uint8_t M){
   // Z N affected
-  cpu->A = M;
+  cpu->Y = M;
   cpu->P.Z = (cpu->Y == 0);
   cpu->P.N = (cpu->Y & 0x80) != 0;
 }
@@ -314,10 +314,7 @@ void TXA_c(cpu6502 *cpu){
 
 #define TXS() TXS_c(&default_cpu)
 void TXS_c(cpu6502 *cpu){
-  // Z N affected
   cpu->SP = cpu->X;
-  cpu->P.Z = (cpu->SP == 0);
-  cpu->P.N = (cpu->SP & 0x80) != 0;
 }
 
 #define TYA() TYA_c(&default_cpu)
