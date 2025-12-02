@@ -161,7 +161,7 @@ void CMP_c(cpu6502 *cpu, uint8_t M){
   uint8_t result = cpu->A - M;
   cpu->P.C = (cpu->A >= M);
   cpu->P.Z = (cpu->A == M);
-  cpu->P.N = (cpu->A & 0x80) != 0; 
+  cpu->P.N = (result & 0x80) != 0; 
 }
 
 #define CPX(M) CPX_c(&default_cpu, M) 
