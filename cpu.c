@@ -96,6 +96,45 @@ void BRK_c(cpu6502 *cpu){
   cpu->P.B = 1;
 }
 
+#define BCC(offset) BCC_c(&default_cpu, offset)
+void BCC_c(cpu6502 *cpu, uint8_t offset){
+  if (!cpu->P.C) cpu->PC += offset;
+}
+
+#define BCS(offset) BSC_c(&default_cpu, offset)
+void BCS_c(cpu6502 *cpu, uint8_t offset){
+  if (cpu->P.C == 1) cpu->PC += offset;
+}
+
+#define BEQ(offset) BEQ_c(&default_cpu, offset)
+void BEQ_c(cpu6502 *cpu, uint8_t offset){
+  if (cpu->P.Z == 1) cpu->PC += offset;
+}
+
+#define BIT(M) BIT_c(&default_cpu, M)
+void BIT_c(cpu6502 *cpu, uint8_t M){
+  // N V affected
+  uint8_t result = cpu->A & M;
+  cpu->P.Z = (result == 0);
+  cpu->P.V = (M & 0x40) != 0;
+  cpu->P.N = (M & 0x80) != 0;
+}
+
+#define BMI(offset) BMI_c(&default_cpu, offset)
+void BMI_c(cpu6502 *cpu, uint8_t offset){
+  if (cpu->P.N == 1) cpu->PC += offset;
+}
+
+#define BNE(offset) BNE_c(&default_cpu, offset)
+void BNE_c(cpu6502 *cpu, uint8_t offset){
+  if (!cpu->P.Z) cpu->PC += offset;
+}
+
+#define BPL(offset) BPL_c(&default_cpu, offset)
+void BPL_c(cpu6502 *cpu, uint8_t offset){
+  if (!cpu->P.N) cpu->PC += offset;
+}
+
 #define CLC() CLC_c(&default_cpu)
 void CLC_c(cpu6502 *cpu){
   cpu->P.C = 0;
@@ -238,7 +277,7 @@ void LDX_c(cpu6502 *cpu, uint8_t M){
   cpu->P.N = (cpu->X & 0x80) != 0;
 }
 
-#define LDY(M) LDY(&default_cpu, M)
+#define LDY(M) LDY_c(&default_cpu, M)
 void LDY_c(cpu6502 *cpu, uint8_t M){
   // Z N affected
   cpu->Y = M;
