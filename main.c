@@ -77,6 +77,7 @@ void CLV(cpu6502 *cpu){
 
 void CMP(cpu6502 *cpu, uint8_t M){
   // C Z N affected
+  uint8_t result = cpu->A - M;
   cpu->P.C = (cpu->A >= M);
   cpu->P.Z = (cpu->A == M);
   cpu->P.N = (cpu->A & 0x80) != 0; 
@@ -84,16 +85,18 @@ void CMP(cpu6502 *cpu, uint8_t M){
 
 void CPX(cpu6502 *cpu, uint8_t M){
   // C Z N affected
+  uint8_t result = cpu->X - M;
   cpu->P.C = (cpu->X >= M);
   cpu->P.Z = (cpu->X == M);
-  cpu->P.N = (cpu->X & 0x80) != 0; 
+  cpu->P.N = (result & 0x80) != 0; 
 }
 
 void CPY(cpu6502 *cpu, uint8_t M){
   // C Z N affected
+  uint8_t result = cpu->Y - M;
   cpu->P.C = (cpu->Y >= M);
   cpu->P.Z = (cpu->Y == M);
-  cpu->P.N = (cpu->Y & 0x80) != 0; 
+  cpu->P.N = (result & 0x80) != 0; 
 }
 
 void DEC(cpu6502 *cpu, uint16_t addr){
