@@ -179,3 +179,113 @@ void INY(cpu6502 *cpu){
 void JMP(cpu6502 *cpu, uint16_t addr){
   cpu->PC = addr;
 }
+
+void LDA(cpu6502 *cpu, uint8_t M){
+  // Z N affected
+  cpu->A = M;
+  cpu->P.Z = (cpu->A == 0);
+  cpu->P.N = (cpu->A & 0x80) != 0;
+}
+
+void LDX(cpu6502 *cpu, uint8_t M){
+  // Z N affected
+  cpu->X = M;
+  cpu->P.Z = (cpu->X == 0);
+  cpu->P.N = (cpu->X & 0x80) != 0;
+}
+
+
+void LDY(cpu6502 *cpu, uint8_t M){
+  // Z N affected
+  cpu->A = M;
+  cpu->P.Z = (cpu->Y == 0);
+  cpu->P.N = (cpu->Y & 0x80) != 0;
+}
+
+void ORA(cpu6502 *cpu, uint8_t M){
+  // Z N affected
+  cpu->A = cpu->A | M;
+  cpu->P.Z = (cpu->A == 0);
+  cpu->P.N = (cpu->A & 0x80) != 0;
+}
+
+void PHA(cpu6502 *cpu){
+  push(cpu, cpu->A);
+}
+
+void PHP(cpu6502 *cpu){
+  // push(cpu, cpu->P); not sure how to do for now
+}
+
+uint8_t PLA(cpu6502 *cpu, uint8_t value){
+  return pull(cpu, value);
+}
+
+// TODO: IMPLEMENT PLP
+
+void SEC(cpu6502 *cpu){
+  cpu->P.C = 1;
+}
+
+void SED(cpu6502 *cpu){
+  cpu->P.D = 1;
+}
+
+void SEI(cpu6502 *cpu){
+  cpu->P.I = 1;
+}
+
+void STA(cpu6502 *cpu, uint8_t addr){
+  memory[addr] = cpu->A;
+}
+
+void STX(cpu6502 *cpu, uint8_t addr){
+  memory[addr] = cpu->X;
+}
+
+void STY(cpu6502 *cpu, uint8_t addr){
+  memory[addr] = cpu->Y;
+}
+
+void TAX(cpu6502 *cpu){
+  // Z N affected
+  cpu->X = cpu->A;
+  cpu->P.Z = (cpu->X == 0);
+  cpu->P.N = (cpu->X & 0x80) != 0;
+}
+
+void TAY(cpu6502 *cpu){
+  // Z N affected
+  cpu->Y = cpu->A;
+  cpu->P.Z = (cpu->Y == 0);
+  cpu->P.N = (cpu->Y & 0x80) != 0;
+}
+
+void TSX(cpu6502 *cpu){
+  // Z N affected
+  cpu->X = cpu->SP;
+  cpu->P.Z = (cpu->X == 0);
+  cpu->P.N = (cpu->X & 0x80) != 0;
+}
+
+void TXA(cpu6502 *cpu){
+  // Z N affected
+  cpu->A = cpu->X;
+  cpu->P.Z = (cpu->A == 0);
+  cpu->P.N = (cpu->A & 0x80) != 0;
+}
+
+void TXS(cpu6502 *cpu){
+  // Z N affected
+  cpu->SP = cpu->X;
+  cpu->P.Z = (cpu->SP == 0);
+  cpu->P.N = (cpu->SP & 0x80) != 0;
+}
+
+void TYA(cpu6502 *cpu){
+  // Z N affected
+  cpu->A = cpu->Y;
+  cpu->P.Z = (cpu->A == 0);
+  cpu->P.N = (cpu->A & 0x80) != 0;
+}
+
