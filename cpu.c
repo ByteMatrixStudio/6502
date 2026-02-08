@@ -429,7 +429,7 @@ void LSR_A_c(cpu6502 *cpu) {
   uint8_t value = cpu->A;
 
   cpu->P.C = (value & 0x01) != 0;
-  value = (value << 1) & U8_MAX;
+  value = (value >> 1) & U8_MAX;
   cpu->A = value;
   cpu->P.Z = (cpu->A == 0);
   cpu->P.N = (cpu->A & 0x80) != 0;
@@ -548,7 +548,7 @@ void RTI_c(cpu6502 *cpu){
 
   uint8_t lo = pull_c(cpu);
   uint8_t hi = pull_c(cpu);
-  cpu->PC = ((uint16_t)hi << 8| lo) +1;
+  cpu->PC = ((uint16_t)hi << 8| lo);
 }
 
 #define NOP() NOP_c(&default_cpu)
