@@ -204,9 +204,9 @@ int main(void) {
          passed_tests, total_tests);
 
   if (passed_tests == total_tests)
-    printf("✅ All tests passed successfully!\n");
+    printf("SUCCESS: All tests passed successfully\n");
   else
-    printf("❌ Some tests failed.\n");
+    printf("ERROR: Some tests failed.\n");
 
   return (passed_tests == total_tests) ? 0 : 1;
 }
