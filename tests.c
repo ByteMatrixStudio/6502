@@ -5,20 +5,20 @@ static int total_tests = 0;
 static int passed_tests = 0;
 
 #define BEGIN_TEST(name)                        \
-  do {                                           \
-    printf("%-40s ... ", name);                  \
-    fflush(stdout);                              \
-    total_tests++;                               \
+  do {                                         \
+    printf("%-40s ... ", name);                \
+    fflush(stdout);                            \
+    total_tests++;                             \
   } while (0)
 
-#define END_TEST(cond)                           \
-  do {                                           \
-    if (cond) {                                 \
-      passed_tests++;                           \
-      printf("OK\n");                           \
-    } else {                                    \
-      printf("FAIL\n");                         \
-    }                                            \
+#define END_TEST(cond)                         \
+  do {                                         \
+    if (cond) {                               \
+      passed_tests++;                         \
+      printf("OK\n");                         \
+    } else {                                  \
+      printf("FAIL\n");                       \
+    }                                         \
   } while (0)
 
 static int flags_equal(uint8_t C, uint8_t Z, uint8_t I, uint8_t D,
@@ -36,7 +36,6 @@ static int flags_equal(uint8_t C, uint8_t Z, uint8_t I, uint8_t D,
 int main(void) {
   printf("Starting 6502 CPU test suite...\n\n");
 
-  // ----------------------------------------------------------
   BEGIN_TEST("RESET initializes registers and memory");
   reset_cpu();
   int ok_reset = (default_cpu.A == 0 &&
@@ -48,7 +47,6 @@ int main(void) {
     if (memory[i] != 0) ok_reset = 0;
   END_TEST(ok_reset);
 
-  // ----------------------------------------------------------
   BEGIN_TEST("LDA sets A and flags correctly");
   LDA(0x42);
   int ok_lda = (default_cpu.A == 0x42 && !default_cpu.P.Z && !default_cpu.P.N);
@@ -58,27 +56,26 @@ int main(void) {
   ok_lda &= (default_cpu.P.N == 1);
   END_TEST(ok_lda);
 
-  // ----------------------------------------------------------
   BEGIN_TEST("ADC basic addition and flags");
   reset_cpu();
   LDA(0x10);
   CLC();
   ADC(0x05);
-  int ok_adc = (default_cpu.A == 0x15 && default_cpu.P.C == 0 &&
+  int ok_adc = (default_cpu.A == 0x15 &&
+                default_cpu.P.C == 0 &&
                 default_cpu.P.V == 0);
   END_TEST(ok_adc);
 
-  // ----------------------------------------------------------
   BEGIN_TEST("ADC overflow behavior");
   reset_cpu();
   LDA(0x50);
   CLC();
   ADC(0x50);
-  int ok_adc_over = (default_cpu.A == 0xA0 && default_cpu.P.V == 1);
+  int ok_adc_over = (default_cpu.A == 0xA0 &&
+                      default_cpu.P.V == 1);
   END_TEST(ok_adc_over);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Transfers (TAX, TAY, TXA, TYA, TXS, TSX)");
+  BEGIN_TEST("Transfers (TAX TAY TXA TYA TXS TSX)");
   reset_cpu();
   LDA(0x7F);
   TAX();
@@ -94,8 +91,7 @@ int main(void) {
        default_cpu.P.Z == 0);
   END_TEST(ok_transfers);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("INX/DEX/INY/DEY modify registers correctly");
+  BEGIN_TEST("INX/DEX/INY/DEY modify registers");
   reset_cpu();
   LDX(0x00);
   INX();
@@ -104,11 +100,12 @@ int main(void) {
   INY();
   DEY();
   int ok_incs =
-      (default_cpu.X == 0 && default_cpu.Y == 0xFF && default_cpu.P.Z == 0);
+      (default_cpu.X == 0 &&
+       default_cpu.Y == 0xFF &&
+       default_cpu.P.Z == 0);
   END_TEST(ok_incs);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Memory INC/DEC operations");
+  BEGIN_TEST("Memory INC/DEC");
   reset_cpu();
   memory[0x200] = 0x42;
   INC(0x200);
@@ -116,8 +113,7 @@ int main(void) {
   int ok_mem = (memory[0x200] == 0x42);
   END_TEST(ok_mem);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Logic ops (AND/ORA/EOR)");
+  BEGIN_TEST("Logic ops AND/ORA/EOR");
   reset_cpu();
   LDA(0xF0);
   AND(0x0F);
@@ -126,43 +122,46 @@ int main(void) {
   int ok_logic = (default_cpu.A == 0x55);
   END_TEST(ok_logic);
 
-  // ----------------------------------------------------------
-  // ✅ Corrected comparison tests
-  BEGIN_TEST("Comparison ops (CMP)");
+  BEGIN_TEST("CMP");
   reset_cpu();
   LDA(0x80);
   CMP(0x80);
-  int ok_cmp = (default_cpu.P.Z == 1 && default_cpu.P.C == 1);
+  int ok_cmp = (default_cpu.P.Z == 1 &&
+                default_cpu.P.C == 1);
   END_TEST(ok_cmp);
 
-  BEGIN_TEST("Comparison ops (CPX)");
+  BEGIN_TEST("CPX");
   reset_cpu();
   LDX(0x10);
   CPX(0x20);
-  int ok_cpx = (default_cpu.P.Z == 0 && default_cpu.P.C == 0 && default_cpu.P.N == 1);
+  int ok_cpx = (default_cpu.P.Z == 0 &&
+                default_cpu.P.C == 0 &&
+                default_cpu.P.N == 1);
   END_TEST(ok_cpx);
 
-  BEGIN_TEST("Comparison ops (CPY)");
+  BEGIN_TEST("CPY");
   reset_cpu();
   LDY(0x05);
   CPY(0x04);
-  int ok_cpy = (default_cpu.P.Z == 0 && default_cpu.P.C == 1 && default_cpu.P.N == 0);
+  int ok_cpy = (default_cpu.P.Z == 0 &&
+                default_cpu.P.C == 1 &&
+                default_cpu.P.N == 0);
   END_TEST(ok_cpy);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Flag manipulation CLC/SEC CLD/SED CLI/SEI CLV");
+  BEGIN_TEST("Flag manipulation");
   reset_cpu();
   SEC();
   CLD();
   CLI();
   CLV();
   int ok_flags =
-      (default_cpu.P.C == 1 && default_cpu.P.D == 0 && default_cpu.P.I == 0 &&
+      (default_cpu.P.C == 1 &&
+       default_cpu.P.D == 0 &&
+       default_cpu.P.I == 0 &&
        default_cpu.P.V == 0);
   END_TEST(ok_flags);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Branching (BCC BEQ BPL)");
+  BEGIN_TEST("Branching BCC BEQ BPL");
   reset_cpu();
   default_cpu.PC = 0x1000;
   default_cpu.P.C = 0;
@@ -176,18 +175,17 @@ int main(void) {
   ok_branch &= (default_cpu.PC == 0x1040);
   END_TEST(ok_branch);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Push/Pull stack");
+  BEGIN_TEST("Stack PHA/PLA");
   reset_cpu();
   LDA(0xAB);
   PHA();
   LDA(0x00);
   LDA(PLA());
-  int ok_stack = (default_cpu.A == 0xAB && default_cpu.SP == 0xFF);
+  int ok_stack = (default_cpu.A == 0xAB &&
+                  default_cpu.SP == 0xFF);
   END_TEST(ok_stack);
 
-  // ----------------------------------------------------------
-  BEGIN_TEST("Store/Load memory (STA/STX/STY)");
+  BEGIN_TEST("Store instructions");
   reset_cpu();
   LDA(0x12);
   STA(0x0200);
@@ -195,11 +193,122 @@ int main(void) {
   STX(0x0201);
   LDY(0x56);
   STY(0x0202);
-  int ok_store = (memory[0x200] == 0x12 && memory[0x201] == 0x34 &&
+  int ok_store = (memory[0x200] == 0x12 &&
+                  memory[0x201] == 0x34 &&
                   memory[0x202] == 0x56);
   END_TEST(ok_store);
 
-  // ----------------------------------------------------------
+  BEGIN_TEST("BIT");
+  reset_cpu();
+  LDA(0x40);
+  BIT(0xC0);
+  int ok_bit = (default_cpu.P.Z == 0 &&
+                default_cpu.P.V == 1 &&
+                default_cpu.P.N == 1);
+  END_TEST(ok_bit);
+
+  BEGIN_TEST("SBC");
+  reset_cpu();
+  LDA(0x10);
+  SEC();
+  SBC(0x01);
+  int ok_sbc = (default_cpu.A == 0x0F &&
+                default_cpu.P.C == 1);
+  END_TEST(ok_sbc);
+
+  BEGIN_TEST("ASL A");
+  reset_cpu();
+  LDA(0x40);
+  ASL_A();
+  int ok_asl = (default_cpu.A == 0x80 &&
+                default_cpu.P.C == 0 &&
+                default_cpu.P.N == 1);
+  END_TEST(ok_asl);
+
+  BEGIN_TEST("LSR A");
+  reset_cpu();
+  LDA(0x01);
+  LSR_A();
+  int ok_lsr = (default_cpu.A == 0x00 &&
+                default_cpu.P.C == 1 &&
+                default_cpu.P.Z == 1);
+  END_TEST(ok_lsr);
+
+  BEGIN_TEST("ROL A");
+  reset_cpu();
+  LDA(0x80);
+  CLC();
+  ROL_A();
+  int ok_rol = (default_cpu.A == 0x00 &&
+                default_cpu.P.C == 1 &&
+                default_cpu.P.Z == 1);
+  END_TEST(ok_rol);
+
+  BEGIN_TEST("ROR A");
+  reset_cpu();
+  LDA(0x01);
+  SEC();
+  ROR_A();
+  int ok_ror = (default_cpu.A == 0x00 &&
+                default_cpu.P.C == 1);
+  END_TEST(ok_ror);
+
+  BEGIN_TEST("PHP/PLP");
+  reset_cpu();
+  SEC();
+  SEI();
+  PHP();
+  CLC();
+  CLI();
+  PLP();
+  int ok_php = (default_cpu.P.C == 1 &&
+                default_cpu.P.I == 1);
+  END_TEST(ok_php);
+
+  BEGIN_TEST("JSR/RTS");
+  reset_cpu();
+  default_cpu.PC = 0x3000;
+  JSR(0x4000);
+  RTS();
+  int ok_jsr = (default_cpu.PC == 0x3000);
+  END_TEST(ok_jsr);
+
+  BEGIN_TEST("RTI");
+  reset_cpu();
+  default_cpu.PC = 0x2000;
+  SEC();
+  PHP();
+  push(0x34);
+  push(0x12);
+  RTI();
+  int ok_rti = (default_cpu.PC == 0x1235 &&
+                default_cpu.P.C == 1);
+  END_TEST(ok_rti);
+
+  BEGIN_TEST("BVC/BVS");
+  reset_cpu();
+  default_cpu.PC = 0x1000;
+  default_cpu.P.V = 0;
+  BVC(0x10);
+  int ok_bv = (default_cpu.PC == 0x1010);
+  default_cpu.P.V = 1;
+  BVS(0x10);
+  ok_bv &= (default_cpu.PC == 0x1020);
+  END_TEST(ok_bv);
+
+  BEGIN_TEST("JMP");
+  reset_cpu();
+  JMP(0xDEAD);
+  int ok_jmp = (default_cpu.PC == 0xDEAD);
+  END_TEST(ok_jmp);
+
+  BEGIN_TEST("NOP");
+  reset_cpu();
+  LDA(0x42);
+  NOP();
+  int ok_nop = (default_cpu.A == 0x42);
+  END_TEST(ok_nop);
+
   printf("\n6502 TEST SUMMARY: %d / %d tests passed.\n",
          passed_tests, total_tests);
 
