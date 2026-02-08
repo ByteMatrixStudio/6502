@@ -278,8 +278,8 @@ int main(void) {
   default_cpu.PC = 0x2000;
   SEC();
   PHP();
-  push(0x34);
   push(0x12);
+  push(0x34);
   RTI();
   int ok_rti = (default_cpu.PC == 0x1235 &&
                 default_cpu.P.C == 1);
