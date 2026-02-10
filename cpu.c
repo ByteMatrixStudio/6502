@@ -109,24 +109,39 @@ void AND_c(cpu6502 *cpu, uint8_t M) {
 }
 
 #define BRK() BRK_c(&default_cpu)
-void BRK_c(cpu6502 *cpu) { cpu->P.B = 1; }
+void BRK_c(cpu6502 *cpu) {
+  cpu->PC++;
+
+  push_c(cpu, (cpu->PC >> 8) & 0xFF);
+  push_c(cpu, cpu->PC & 0xFF);
+
+  uint8_t p = pack_P(cpu);
+  p |= 0x10;
+  push_c(cpu, p);
+
+  cpu->P.I = 1;
+
+  uint8_t lo = memory[0xFFFE];
+  uint8_t hi = memory[0xFFFF];
+  cpu->PC = ((uint16_t)hi << 8) | lo;
+}
 
 #define BCC(offset) BCC_c(&default_cpu, offset)
 void BCC_c(cpu6502 *cpu, uint8_t offset) {
   if (!cpu->P.C)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
-#define BCS(offset) BSC_c(&default_cpu, offset)
+#define BCS(offset) BCS_c(&default_cpu, offset)
 void BCS_c(cpu6502 *cpu, uint8_t offset) {
   if (cpu->P.C == 1)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
 #define BEQ(offset) BEQ_c(&default_cpu, offset)
 void BEQ_c(cpu6502 *cpu, uint8_t offset) {
   if (cpu->P.Z == 1)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
 #define BIT(M) BIT_c(&default_cpu, M)
@@ -141,19 +156,19 @@ void BIT_c(cpu6502 *cpu, uint8_t M) {
 #define BMI(offset) BMI_c(&default_cpu, offset)
 void BMI_c(cpu6502 *cpu, uint8_t offset) {
   if (cpu->P.N == 1)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
 #define BNE(offset) BNE_c(&default_cpu, offset)
 void BNE_c(cpu6502 *cpu, uint8_t offset) {
   if (!cpu->P.Z)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
 #define BPL(offset) BPL_c(&default_cpu, offset)
 void BPL_c(cpu6502 *cpu, uint8_t offset) {
   if (!cpu->P.N)
-    cpu->PC += offset;
+    cpu->PC += (int8_t)offset;
 }
 
 #define CLC() CLC_c(&default_cpu)
@@ -390,8 +405,11 @@ void SBC_c(cpu6502 *cpu, uint8_t M) {
   // C Z V N affected
 
   uint16_t value = (uint16_t)M ^ 0x00FF;
-  uint16_t sum = cpu->A - value - (cpu->P.C ? 0 : 1);
-  cpu->P.C = (sum > U8_MAX);
+  uint16_t sum = cpu->A + value + (cpu->P.C ? 1 : 0);
+  
+  cpu->P.C = (sum & 0x100) != 0;
+  cpu->A = (uint8_t)sum;
+  
   cpu->P.Z = (cpu->A == 0);
   cpu->P.V = ((sum ^ cpu->A) & (sum ^ value) & 0x0080) != 0;
   cpu->P.N = (cpu->A & 0x80) != 0;
@@ -441,8 +459,8 @@ void LSR_M_c(cpu6502 *cpu, uint16_t addr) {
   uint8_t value = memory[addr];
 
   cpu->P.C = (value & 0x01) != 0;
-  value = (value << 1) & U8_MAX;
-  cpu->A = value;
+  value = (value >> 1) & U8_MAX;
+  memory[addr] = value;
   cpu->P.Z = (value == 0);
   cpu->P.N = (value & 0x80) != 0;
 }
@@ -467,17 +485,20 @@ void ROL_M_c(cpu6502 *cpu, uint16_t addr) {
   cpu->P.C = (value & 0x80) != 0;
 
   value = (value << 1) & U8_MAX;
-  cpu->A = value;
+  memory[addr] = value;
 
   cpu->P.Z = (value == 0);
   cpu->P.N = (value & 0x80) != 0;
 }
 
-#define ROR_A() ROL_A_c(&default_cpu)
+#define ROR_A() ROR_A_c(&default_cpu)
 void ROR_A_c(cpu6502 *cpu) {
   // C Z N affected
+
   uint8_t value = cpu->A;
-  cpu->P.C = (value & 0x80) != 0;
+  uint8_t oldc = cpu->P.C;
+  
+  cpu->P.C = (value & 0x01) != 0;
 
   value = (value >> 1) & U8_MAX;
   cpu->A = value;
@@ -493,8 +514,8 @@ void ROR_M_c(cpu6502 *cpu, uint16_t addr) {
   cpu->P.C = (value & 0x80) != 0;
 
   value = (value >> 1) & U8_MAX;
-  cpu->A = value;
-
+  memory[addr] = value;
+  
   cpu->P.Z = (value == 0);
   cpu->P.N = (value & 0x80) != 0;
 }
@@ -507,7 +528,7 @@ void BVC_c(cpu6502 *cpu, uint8_t offset) {
 }
 
 #define BVS(offset) BVS_c(&default_cpu, offset)
-void BVS_c(cpu6502 *cpu, uint8_t offset) {
+void BVS_c(cpu6502 *cpu, int8_t offset) {
   if (cpu->P.V) {
     cpu->PC += (int8_t)offset;
   }
@@ -515,7 +536,7 @@ void BVS_c(cpu6502 *cpu, uint8_t offset) {
 
 #define PHP() PHP_c(&default_cpu)
 void PHP_c(cpu6502 *cpu) {
-  uint8_t p = pack_P(cpu);
+  uint8_t p = pack_P(cpu) | 0x10;
   push_c(cpu, p);
 }
 
@@ -530,7 +551,6 @@ void JSR_c(cpu6502 *cpu, uint16_t addr){
   uint16_t r_addr = cpu->PC -1;
   push_c(cpu, (r_addr >> 8) & 0xFF);
   push_c(cpu, r_addr & 0xFF);
-  
   cpu->PC = addr; 
 }
 
@@ -538,7 +558,7 @@ void JSR_c(cpu6502 *cpu, uint16_t addr){
 void RTS_c(cpu6502 *cpu){
   uint8_t lo = pull_c(cpu);
   uint8_t hi = pull_c(cpu);
-  cpu->PC = ((uint16_t)hi << 8| lo) +1;
+  cpu->PC = ((uint16_t)hi << 8| lo)+1;
 }
 
 #define RTI() RTI_c(&default_cpu)
